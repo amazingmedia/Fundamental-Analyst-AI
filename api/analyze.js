@@ -10,16 +10,16 @@ export default async function handler(request, response) {
     }
 
     try {
-        const { asset } = request.body; 
+        const { asset } = request.body;
 
         if (!asset) {
             return response.status(400).json({ error: 'Asset is required.' });
         }
 
-        // === ဒီနေရာက URL ကို ပြင်ဆင်လိုက်ပါပြီ ===
-        // v1beta အစား v1 ကိုသုံးပါမယ်
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-        
+        // === ဒီနေရာက Model Name ကို ပြောင်းလိုက်ပါပြီ ===
+        // gemini-1.5-flash အစား gemini-1.5-pro-latest ကိုသုံးပါမယ်
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
+
         const prompt = `
             Professional Financial Analyst တစ်ယောက်အနေဖြင့် အောက်ပါအချက်များကို တိကျစွာသုံးသပ်ပေးပါ။ အဖြေအားလုံးကို မြန်မာဘာသာဖြင့်သာ ပြန်လည်ဖြေကြားပါ။ အရေးကြီးသော အဖြစ်အပျက်တိုင်းတွင် နေ့စွဲ (Date) ကို ထည့်သွင်းဖော်ပြပါ။
 
@@ -46,7 +46,7 @@ export default async function handler(request, response) {
             **Sentiment:** [ဥပမာ- Bullish]
             **Reasoning:** [အကြောင်းผล ရှင်းလင်းချက် (နေ့စွဲများဖြင့်)]
         `;
-        
+
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             tools: [{ "google_search": {} }]
@@ -69,7 +69,9 @@ export default async function handler(request, response) {
         if (candidate && candidate.content?.parts?.[0]?.text) {
             response.status(200).json({ text: candidate.content.parts[0].text });
         } else {
-            throw new Error("No content in Google API response.");
+            // တစ်ခါတစ်ရံ candidate မှာ အချက်အလက်မပါဘဲ finishReason: "SAFETY" နဲ့ပြန်လာတတ်လို့ ဒါကိုပါစစ်ပေးထားပါတယ်
+             const safetyError = result.promptFeedback?.blockReason || 'No content in Google API response.';
+             throw new Error(safetyError);
         }
 
     } catch (error) {
