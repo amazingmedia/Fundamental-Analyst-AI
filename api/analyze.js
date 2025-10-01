@@ -1,10 +1,8 @@
 export default async function handler(request, response) {
-    // POST request ဟုတ်မဟုတ် စစ်ဆေးပါ
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // Vercel Environment Variable ကနေ API Key ကို ယူသုံးပါ
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
     if (!GEMINI_API_KEY) {
@@ -12,21 +10,22 @@ export default async function handler(request, response) {
     }
 
     try {
-        const { asset } = request.body; // Frontend က ပို့လိုက်တဲ့ asset name ကို ယူပါ
+        const { asset } = request.body; 
 
         if (!asset) {
             return response.status(400).json({ error: 'Asset is required.' });
         }
 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        // === ဒီနေရာက URL ကို ပြင်ဆင်လိုက်ပါပြီ ===
+        // v1beta အစား v1 ကိုသုံးပါမယ်
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
-        // သင်၏ မူလ prompt ကို ဒီမှာထည့်ပါ
         const prompt = `
             Professional Financial Analyst တစ်ယောက်အနေဖြင့် အောက်ပါအချက်များကို တိကျစွာသုံးသပ်ပေးပါ။ အဖြေအားလုံးကို မြန်မာဘာသာဖြင့်သာ ပြန်လည်ဖြေကြားပါ။ အရေးကြီးသော အဖြစ်အပျက်တိုင်းတွင် နေ့စွဲ (Date) ကို ထည့်သွင်းဖော်ပြပါ။
 
             Asset: ${asset}
 
-            1.  **သတင်းအကျဉ်းချုပ် (News Summary):** Google Search ကိုသုံး၍ ${asset} နှင့်ပတ်သက်သော နောက်ဆုံး 24-48 နာရီအတွင်း အရေးအကြီးဆုံး သတင်းတစ်ပုဒ်ကိုရှာပါ။ **ထိုသတင်းထွက်ခဲ့သည့် နေ့စွဲကို ဖော်ပြပြီး** အဓိကအချက် ၃ ချက်ဖြင့် အကျဉ်းချုပ်ပေးပါ။ ဥပမာ- "(စက်တင်ဘာ ၃၀) - Fed ဥက္ကဌ၏ မိန့်ခွန်းအရ..."
+            1.  **သတင်းအကျဉ်းချုပ် (News Summary):** Google Search ကိုသုံး၍ ${asset} နှင့်ပတ်သက်သော နောက်ဆုံး 24-48 နာရီအတွင်း အရေးအကြီးဆုံး သတင်းတစ်ပုဒ်ကိုရှာပါ။ **ထိုသတင်းထွက်ခဲ့သည့် နေ့စွဲကို ဖော်ပြပြီး** အဓိကအချက် ၃ ချက်ဖြင့် အကျဉ်းချုပ်ပေးပါ။ ဥပမာ- "(အောက်တိုဘာ ၁) - Fed ဥက္ကဌ၏ မိန့်ခွန်းအရ..."
 
             2.  **အရေးကြီးသော စီးပွားရေးသတင်းများ (Economic Calendar):** Google Search ကိုသုံး၍ ${asset} အပေါ် သက်ရောက်မှုအရှိဆုံးဖြစ်မည့် လာမည့် 48-72 နာရီအတွင်းက Economic Calendar မှ အရေးကြီးဆုံး Event ၁ ခု သို့မဟုတ် ၂ ခုကို ဖော်ပြပါ။ Event တစ်ခုချင်းစီ၏ **ကျင်းပမည့် နေ့စွဲနှင့် အချိန် (သိနိုင်လျှင်)** ကို ထည့်သွင်းဖော်ပြပါ။ ထို့နောက် ဖြစ်နိုင်ခြေရှိသော သက်ရောက်မှု (ဥပမာ- Bullish/Bearish for the asset) ကိုပါ ရှင်းပြပါ။
 
@@ -68,7 +67,6 @@ export default async function handler(request, response) {
         const candidate = result.candidates?.[0];
 
         if (candidate && candidate.content?.parts?.[0]?.text) {
-            // အောင်မြင်ရင် AI ရဲ့ အဖြေကို Frontend ကို JSON object အဖြစ်ပြန်ပို့ပေးပါ
             response.status(200).json({ text: candidate.content.parts[0].text });
         } else {
             throw new Error("No content in Google API response.");
