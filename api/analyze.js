@@ -16,8 +16,7 @@ export default async function handler(request, response) {
             return response.status(400).json({ error: 'Asset is required.' });
         }
 
-        // === ဒီနေရာက Model Name ကို ပြောင်းလိုက်ပါပြီ ===
-        // gemini-1.5-flash အစား gemini-1.5-pro-latest ကိုသုံးပါမယ်
+        // === ဒီနေရာက Model Name ကို သေချာစစ်ပါ ===
         const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
 
         const prompt = `
@@ -69,7 +68,6 @@ export default async function handler(request, response) {
         if (candidate && candidate.content?.parts?.[0]?.text) {
             response.status(200).json({ text: candidate.content.parts[0].text });
         } else {
-            // တစ်ခါတစ်ရံ candidate မှာ အချက်အလက်မပါဘဲ finishReason: "SAFETY" နဲ့ပြန်လာတတ်လို့ ဒါကိုပါစစ်ပေးထားပါတယ်
              const safetyError = result.promptFeedback?.blockReason || 'No content in Google API response.';
              throw new Error(safetyError);
         }
