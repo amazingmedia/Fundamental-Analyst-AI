@@ -21,7 +21,7 @@
 <body class="min-h-screen p-4">
     <div class="container mx-auto max-w-4xl w-full">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white mb-2">Fundamental Analyst AI <span class="text-green-400 text-2xl">v2.1 - TEST</span></h1>
+            <h1 class="text-4xl font-bold text-white mb-2">Fundamental Analyst AI <span class="text-indigo-400 text-2xl">v2.0</span></h1>
             <p class="text-lg text-gray-400">အချိန်နှင့်တပြေးညီ ဈေးကွက်သတင်းများကို AI ဖြင့် အသေးစိတ်ခွဲခြမ်းစိတ်ဖြာပါ။</p>
         </header>
 
@@ -44,7 +44,7 @@
                     </select>
                 </div>
                 <button id="analyze-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition">
-                    <svg xmlns="http://www.w.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     သုံးသပ်ချက်ရယူပါ
                 </button>
             </div>
@@ -65,62 +65,62 @@
         analyzeBtn.addEventListener('click', getAnalysis);
 
         async function getAnalysis() {
-            console.log("1. Analysis started.");
             loader.style.display = 'block';
             analysisOutput.innerHTML = '';
 
             try {
-                console.log("2. Sending request to /api/analyze...");
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ asset: assetSelect.value })
                 });
-                console.log("3. Received response from server.", response);
+                
+                const result = await response.json();
 
                 if (!response.ok) {
-                    console.log("4. Response was not OK (status is 4xx or 5xx).");
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                    throw new Error(result.error || `Server error: ${response.status}`);
                 }
-
-                console.log("5. Response is OK. Parsing JSON...");
-                const result = await response.json();
-                console.log("6. JSON parsed successfully. Result:", result);
-
                 if (result.error) {
-                    console.log("7. Result object contains an error property.");
                     throw new Error(result.error);
                 }
-
                 if (result.text && result.text.trim() !== '') {
-                    console.log("8. Result has text. Displaying results.");
                     displayResults(result.text);
                 } else {
-                    console.log("9. Result has no text or is empty. Throwing empty content error.");
                     throw new Error("API မှ အချက်အလက်ရသော်လည်း ပြသရန် စာသားမပါဝင်ပါ။");
                 }
-                console.log("10. End of try block.");
 
             } catch (error) {
-                console.error("11. CATCH BLOCK TRIGGERED. Error:", error);
                 analysisOutput.innerHTML = `<div class="glass-card rounded-xl p-6 text-red-400">သုံးသပ်ချက်ရယူရာတွင် အမှားအယွင်းเกิดขึ้นပါသည်။<br>${error.message}</div>`;
             } finally {
-                console.log("12. FINALLY BLOCK TRIGGERED. Hiding loader.");
                 loader.style.display = 'none';
             }
         }
 
+        // === ဒီ function က အဓိက ပြင်ဆင်ချက်ပါ ===
         function displayResults(text) {
-            console.log("Displaying results function called.");
-            const summaryMatch = text.match(/### သတင်းအကျဉ်းချုပ်([\s\S]*?)###/);
-            const calendarMatch = text.match(/### အရေးကြီးသော စီးပွားရေးသတင်းများ([\s\S]*?)###/);
-            const sentimentMatch = text.match(/### ဈေးကွက်၏ ခံစားချက်([\s\S]*)/);
+            // AI က ### အစား ** နဲ့ ခေါင်းစဉ်တပ်တဲ့အတွက် regex ကို ပြင်ဆင်လိုက်ပါတယ်။
+            const summaryMatch = text.match(/\*\*(?:သတင်းအကျဉ်းချုပ်)\*\*([\s\S]*?)(?=\*\*|$)/);
+            const calendarMatch = text.match(/\*\*(?:အရေးကြီးသော စီးပွားရေးသတင်းများ)\*\*([\s\S]*?)(?=\*\*|$)/);
+            const sentimentMatch = text.match(/\*\*(?:ဈေးကွက်၏ ခံစားချက်)\*\*([\s\S]*?)(?=\*\*|$)/);
+            
             let html = '';
-            if (summaryMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>သတင်းအကျဉ်းချုပ်</h3><ul class="space-y-2 list-disc">${formatText(summaryMatch[1])}</ul></div>`; }
-            if (calendarMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>အရေးကြီးသော စီးပွားရေးသတင်းများ</h3><div>${formatText(calendarMatch[1])}</div></div>`; }
-            if (sentimentMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>ဈေးကွက်၏ ခံစားချက်</h3><div>${formatText(sentimentMatch[1])}</div></div>`; }
-            analysisOutput.innerHTML = html;
+
+            if (summaryMatch && summaryMatch[1]) {
+                html += `<div class="output-card glass-card rounded-xl p-6"><h3>သတင်းအကျဉ်းချုပ်</h3><ul class="space-y-2 list-disc">${formatText(summaryMatch[1])}</ul></div>`;
+            }
+            if (calendarMatch && calendarMatch[1]) {
+                html += `<div class="output-card glass-card rounded-xl p-6"><h3>အရေးကြီးသော စီးပွားရေးသတင်းများ</h3><div>${formatText(calendarMatch[1])}</div></div>`;
+            }
+            if (sentimentMatch && sentimentMatch[1]) {
+                html += `<div class="output-card glass-card rounded-xl p-6"><h3>ဈေးကွက်၏ ခံစားချက်</h3><div>${formatText(sentimentMatch[1])}</div></div>`;
+            }
+
+            if (html === '') {
+                 // အကယ်၍ အပေါ်က format တွေနဲ့ ရှာမတွေ့ခဲ့ရင် AI ပို့လိုက်တဲ့ မူရင်းစာကိုပဲ တိုက်ရိုက်ပြမယ်။
+                analysisOutput.innerHTML = `<div class="output-card glass-card rounded-xl p-6">${formatText(text)}</div>`;
+            } else {
+                analysisOutput.innerHTML = html;
+            }
         }
 
         function formatText(text) {
