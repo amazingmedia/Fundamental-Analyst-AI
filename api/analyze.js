@@ -16,8 +16,6 @@ export default async function handler(request, response) {
             return response.status(400).json({ error: 'Asset is required.' });
         }
 
-        // === အဓိက ပြင်ဆင်ချက် ===
-        // ခင်ဗျားရဲ့ မူလ code မှာ အလုပ်လုပ်တဲ့ API URL ကို ပြန်သုံးပါမယ်။
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
         
         const prompt = `
@@ -26,8 +24,6 @@ export default async function handler(request, response) {
             (Your full prompt text here...)
         `;
 
-        // === အဓိက ပြင်ဆင်ချက် ===
-        // "tools" parameter ကို ပြန်ထည့်ပါမယ်။ v1beta မှာ အလုပ်လုပ်ပါတယ်။
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             tools: [{ "google_search": {} }]
@@ -47,11 +43,15 @@ export default async function handler(request, response) {
         const result = await geminiResponse.json();
         const candidate = result.candidates?.[0];
 
+        // === ဒီနေရာက အဓိက ပြင်ဆင်ချက်ပါ ===
         if (candidate && candidate.content?.parts?.[0]?.text) {
+            // အောင်မြင်ရင် စာသားကိုပြန်ပို့မယ်
             response.status(200).json({ text: candidate.content.parts[0].text });
         } else {
-             const feedback = result.promptFeedback || { blockReason: 'No content in Google API response.'};
-             throw new Error(feedback.blockReason);
+            // စာသားမပါရင် ဘာကြောင့်လဲဆိုတာကို error message အဖြစ်ပြန်ပို့မယ်
+            const reason = candidate?.finishReason || result.promptFeedback?.blockReason || 'UNKNOWN_REASON';
+            console.error(`No text in response. Finish Reason: ${reason}`);
+            response.status(200).json({ error: `API မှ အဖြေရသော်လည်း စာသားမပါဝင်ပါ။ အကြောင်းအရင်း: ${reason}` });
         }
 
     } catch (error) {
