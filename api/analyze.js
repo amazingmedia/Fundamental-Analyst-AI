@@ -1,6 +1,5 @@
 export default async function handler(request, response) {
-    // Log message ထည့်ပြီး ဘယ် version run နေလဲ စစ်ပါမယ်
-    console.log("Executing analyze.js version with gemini-1.5-pro-latest.");
+    console.log("Executing FINAL version (tools removed).");
 
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
@@ -19,18 +18,17 @@ export default async function handler(request, response) {
         }
 
         const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
-        console.log(`Sending request to: ${API_URL.split('?')[0]}`); // URL ကို log မှာပြပါမယ်
-
-        // ... (prompt code is the same, no need to copy it here again, just use the file)
+        
         const prompt = `
             Professional Financial Analyst တစ်ယောက်အနေဖြင့် အောက်ပါအချက်များကို တိကျစွာသုံးသပ်ပေးပါ။ အဖြေအားလုံးကို မြန်မာဘာသာဖြင့်သာ ပြန်လည်ဖြေကြားပါ။ အရေးကြီးသော အဖြစ်အပျက်တိုင်းတွင် နေ့စွဲ (Date) ကို ထည့်သွင်းဖော်ပြပါ။
             Asset: ${asset}
             (Your full prompt text here...)
         `;
 
+        // === ဒီနေရာက အဓိက ပြင်ဆင်ချက်ပါ ===
+        // "tools" ဆိုတဲ့ line ကို လုံးဝ ဖြုတ်လိုက်ပါပြီ။
         const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            tools: [{ "google_search": {} }]
+            contents: [{ parts: [{ text: prompt }] }]
         };
 
         const geminiResponse = await fetch(API_URL, {
