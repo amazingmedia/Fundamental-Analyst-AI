@@ -16,35 +16,35 @@ export default async function handler(request, response) {
 
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
         
-        // === ဒီနေရာက အဓိက ပြင်ဆင်ချက်ပါ ===
-        // Prompt ကို ပိုပြီးအသေးစိတ်ကျတဲ့ ညွှန်ကြားချက်တွေနဲ့ အစားထိုးလိုက်ပါတယ်။
-        const today = new Date().toLocaleDateString('en-CA'); // Gets today's date as YYYY-MM-DD
+        // === အဓိက ပြင်ဆင်ချက် ===
+        // Prompt ကို ခင်ဗျားရဲ့ မူလ HTML File ထဲကအတိုင်း အတိအကျ ပြန်ပြောင်းထားပါတယ်။
         const prompt = `
-            You are a top-tier financial analyst for a major news outlet like Bloomberg. Your analysis must be precise, data-driven, and written in Burmese. Today's date is ${today}.
+            Professional Financial Analyst တစ်ယောက်အနေဖြင့် အောက်ပါအချက်များကို တိကျစွာသုံးသပ်ပေးပါ။ အဖြေအားလုံးကို မြန်မာဘာသာဖြင့်သာ ပြန်လည်ဖြေကြားပါ။ အရေးကြီးသော အဖြစ်အပျက်တိုင်းတွင် နေ့စွဲ (Date) ကို ထည့်သွင်းဖော်ပြပါ။
 
-            Asset to analyze: ${asset}
+            Asset: ${asset}
 
-            Provide a detailed analysis structured exactly as follows. You MUST include specific dates and data points in your reasoning.
+            1.  **သတင်းအကျဉ်းချုပ် (News Summary):** Google Search ကိုသုံး၍ ${asset} နှင့်ပတ်သက်သော နောက်ဆုံး 24-48 နာရီအတွင်း အရေးအကြီးဆုံး သတင်းတစ်ပုဒ်ကိုရှာပါ။ **ထိုသတင်းထွက်ခဲ့သည့် နေ့စွဲကို ဖော်ပြပြီး** အဓိကအချက် ၃ ချက်ဖြင့် အကျဉ်းချုပ်ပေးပါ။ ဥပမာ- "(စက်တင်ဘာ ၃၀) - Fed ဥက္ကဌ၏ မိန့်ခွန်းအရ..."
 
+            2.  **အရေးကြီးသော စီးပွားရေးသတင်းများ (Economic Calendar):** Google Search ကိုသုံး၍ ${asset} အပေါ် သက်ရောက်မှုအရှိဆုံးဖြစ်မည့် လာမည့် 48-72 နာရီအတွင်းက Economic Calendar မှ အရေးကြီးဆုံး Event ၁ ခု သို့မဟုတ် ၂ ခုကို ဖော်ပြပါ။ Event တစ်ခုချင်းစီ၏ **ကျင်းပမည့် နေ့စွဲနှင့် အချိန် (သိနိုင်လျှင်)** ကို ထည့်သွင်းဖော်ပြပါ။ ထို့နောက် ဖြစ်နိုင်ခြေရှိသော သက်ရောက်မှု (ဥပမာ- Bullish/Bearish for the asset) ကိုပါ ရှင်းပြပါ။
+
+            3.  **ဈေးကွက်၏ ခံစားချက် (Market Sentiment):** Google Search မှရသော နောက်ဆုံးရသတင်းများနှင့် **မကြာသေးမီက ဖြစ်ပျက်ခဲ့သော အဖြစ်အပျက်များ (ဥပမာ- မနေ့က NFP data အရ...)** ကို အခြေခံ၍ ${asset} အတွက် လက်ရှိ Market Sentiment ကို (Bullish, Bearish, Neutral) စသဖြင့် သတ်မှတ်ပေးပါ။ သင်၏ သုံးသပ်ချက်အတွက် အကြောင်းผลကို နေ့စွဲများနှင့် ချိတ်ဆက်ပြီး အတိုချုပ်ရှင်းပြပါ။
+
+            သင်၏အဖြေကို အောက်ပါပုံစံအတိုင်း ခေါင်းစဉ်များဖြင့် ရှင်းလင်းစွာဖွဲ့စည်းပေးပါ-
             ### သတင်းအကျဉ်းချုပ်
-            - Find the single most impactful news story for "${asset}" from the last 24 hours using Google Search.
-            - Start with the date of the news (e.g., "အောက်တိုဘာ ၄၊ ၂၀၂၅:").
-            - Summarize the news in 2-3 key bullet points. Mention specific figures or data if available.
+            - **[နေ့စွဲ]:** [အချက် ၁]
+            - [အချက် ၂]
+            - [အချက် ၃]
 
             ### အရေးကြီးသော စီးပွားရေးသတင်းများ
-            - Find the 1 or 2 most important upcoming economic events that will impact "${asset}" in the next 72 hours from the economic calendar.
-            - For each event, provide:
-              - **Event Name:** (in Burmese and English)
-              - **Date & Time:** (Must include date, time, and timezone like GMT+0)
-              - **Potential Impact:** (Detailed explanation of the potential bullish or bearish impact).
+            **Event Name:** [Event ရဲ့ နာမည်]
+            **Date & Time:** [နေ့စွဲနှင့် အချိန်]
+            **Potential Impact:** [သက်ရောက်မှု ရှင်းလင်းချက်]
 
             ### ဈေးကွက်၏ ခံစားချက်
-            - **Sentiment:** State clearly if it's Bullish, Bearish, or Neutral.
-            - **Reasoning:** This is the most important part. Your reasoning MUST connect the sentiment to the specific, DATED events you mentioned in the "News Summary" and "Economic Calendar" sections. Explain WHY those events create the current sentiment. Use dates to support your claims (e.g., "အောက်တိုဘာ ၄ ရက်နေ့က အစိုးရရပ်ဆိုင်းမှုကြောင့်...").
-
-            Your entire response must be in Burmese.
+            **Sentiment:** [ဥပမာ- Bullish]
+            **Reasoning:** [အကြောင်းผล ရှင်းလင်းချက် (နေ့စွဲများဖြင့်)]
         `;
-
+            
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             tools: [{ "google_search": {} }]
@@ -68,12 +68,10 @@ export default async function handler(request, response) {
             response.status(200).json({ text: candidate.content.parts[0].text });
         } else {
             const reason = candidate?.finishReason || result.promptFeedback?.blockReason || 'UNKNOWN_REASON';
-            console.error(`No text in response. Finish Reason: ${reason}`);
             response.status(200).json({ error: `API မှ အဖြေရသော်လည်း စာသားမပါဝင်ပါ။ အကြောင်းအရင်း: ${reason}` });
         }
 
     } catch (error) {
-        console.error("Server-side Catch Block Error:", error);
         response.status(500).json({ error: error.message });
     }
 }
