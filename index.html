@@ -9,41 +9,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Padauk', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
-        }
-        .glass-card {
-            background: rgba(31, 41, 55, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .spinner {
-            border-top-color: #3498db;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        .asset-select {
-            background-color: #1f2937;
-            border: 1px solid #4b5563;
-            color: #d1d5db;
-        }
-        .output-card h3 {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: white;
-            border-bottom: 2px solid #4b5563;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .output-card ul {
-            list-style-position: inside;
-        }
+        body { font-family: 'Padauk', sans-serif; background-color: #111827; color: #d1d5db; }
+        .glass-card { background: rgba(31, 41, 55, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .spinner { border-top-color: #3498db; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .asset-select { background-color: #1f2937; border: 1px solid #4b5563; color: #d1d5db; }
+        .output-card h3 { font-size: 1.25rem; font-weight: bold; color: white; border-bottom: 2px solid #4b5563; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .output-card ul { list-style-position: inside; }
     </style>
 </head>
 <body class="min-h-screen p-4">
@@ -76,14 +48,11 @@
                     သုံးသပ်ချက်ရယူပါ
                 </button>
             </div>
-
-            <div id="loader" class="text-center py-10" style="display: none;">
+             <div id="loader" class="text-center py-10" style="display: none;">
                 <div class="spinner w-12 h-12 rounded-full border-4 border-gray-600 mx-auto"></div>
                 <p class="mt-4 text-gray-300">နောက်ဆုံးရ သတင်းအချက်အလက်များကို ရှာဖွေသုံးသပ်နေပါသည်...</p>
             </div>
-
-            <div id="analysis-output" class="space-y-6">
-                </div>
+            <div id="analysis-output" class="space-y-6"></div>
         </main>
     </div>
 
@@ -97,29 +66,35 @@
 
         async function getAnalysis() {
             const selectedAsset = assetSelect.value;
-            
             loader.style.display = 'block';
             analysisOutput.innerHTML = '';
 
             try {
-                // ကျွန်တော်တို့ရဲ့ backend API endpoint ကိုခေါ်ပါမယ်
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ asset: selectedAsset }) // asset name ကို body မှာထည့်ပို့ပါ
+                    body: JSON.stringify({ asset: selectedAsset })
                 });
 
+                // Server ကချပေးတဲ့ response error ဖြစ်ဖြစ်၊ success ဖြစ်ဖြစ် json အဖြစ်ဖတ်မယ်
+                const result = await response.json();
+
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'API request failed');
+                    // 500 Internal Server Error လိုမျိုးတွေဆို ဒီကနေပြမယ်
+                    throw new Error(result.error || 'Server error occurred');
                 }
 
-                const result = await response.json();
-                
-                if (result.text) {
+                // Response က အောင်မြင် (200 OK) ပေမယ့် အထဲမှာ error message ပါလာလားစစ်မယ်
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Response အောင်မြင်ပြီး စာသားလည်းပါရင် display လုပ်မယ်
+                if (result.text && result.text.trim() !== '') {
                     displayResults(result.text);
                 } else {
-                    throw new Error("AI မှ အချက်အလက် ပြန်လည်ရရှိခြင်းမရှိပါ (No content in response).");
+                    // Response အောင်မြင်ပေမယ့် ဘာစာမှမပါရင် ဒီ message ပြမယ်
+                    throw new Error("API မှ အချက်အလက်ရသော်လည်း ပြသရန် စာသားမပါဝင်ပါ။");
                 }
 
             } catch (error) {
@@ -131,13 +106,10 @@
         }
 
         function displayResults(text) {
-            // ဒီ function ကတော့ မူလအတိုင်းပါပဲ
             const summaryMatch = text.match(/### သတင်းအကျဉ်းချုပ်([\s\S]*?)###/);
             const calendarMatch = text.match(/### အရေးကြီးသော စီးပွားရေးသတင်းများ([\s\S]*?)###/);
             const sentimentMatch = text.match(/### ဈေးကွက်၏ ခံစားချက်([\s\S]*)/);
-
             let html = '';
-
             if (summaryMatch) {
                 html += `<div class="output-card glass-card rounded-xl p-6"><h3>သတင်းအကျဉ်းချုပ်</h3><ul class="space-y-2 list-disc">${formatText(summaryMatch[1])}</ul></div>`;
             }
@@ -147,18 +119,11 @@
             if (sentimentMatch) {
                 html += `<div class="output-card glass-card rounded-xl p-6"><h3>ဈေးကွက်၏ ခံစားချက်</h3><div>${formatText(sentimentMatch[1])}</div></div>`;
             }
-            
             analysisOutput.innerHTML = html;
         }
 
         function formatText(text) {
-             // ဒီ function ကတော့ မူလအတိုင်းပါပဲ
-            return text
-                .trim()
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                .replace(/\* (.*?)/g, '<li>$1</li>')
-                .replace(/^- (.*?)/gm, '<li>$1</li>')
-                .replace(/\n/g, '<br>');
+            return text.trim().replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>').replace(/\* (.*?)/g, '<li>$1</li>').replace(/^- (.*?)/gm, '<li>$1</li>').replace(/\n/g, '<br>');
         }
     </script>
 </body>
