@@ -44,7 +44,7 @@
                     </select>
                 </div>
                 <button id="analyze-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <svg xmlns="http://www.w.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     သုံးသပ်ချက်ရယူပါ
                 </button>
             </div>
@@ -65,60 +65,61 @@
         analyzeBtn.addEventListener('click', getAnalysis);
 
         async function getAnalysis() {
-            const selectedAsset = assetSelect.value;
+            console.log("1. Analysis started.");
             loader.style.display = 'block';
             analysisOutput.innerHTML = '';
 
             try {
+                console.log("2. Sending request to /api/analyze...");
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ asset: selectedAsset })
+                    body: JSON.stringify({ asset: assetSelect.value })
                 });
-
-                // Server ကချပေးတဲ့ response error ဖြစ်ဖြစ်၊ success ဖြစ်ဖြစ် json အဖြစ်ဖတ်မယ်
-                const result = await response.json();
+                console.log("3. Received response from server.", response);
 
                 if (!response.ok) {
-                    // 500 Internal Server Error လိုမျိုးတွေဆို ဒီကနေပြမယ်
-                    throw new Error(result.error || 'Server error occurred');
+                    console.log("4. Response was not OK (status is 4xx or 5xx).");
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
                 }
 
-                // Response က အောင်မြင် (200 OK) ပေမယ့် အထဲမှာ error message ပါလာလားစစ်မယ်
+                console.log("5. Response is OK. Parsing JSON...");
+                const result = await response.json();
+                console.log("6. JSON parsed successfully. Result:", result);
+
                 if (result.error) {
+                    console.log("7. Result object contains an error property.");
                     throw new Error(result.error);
                 }
 
-                // Response အောင်မြင်ပြီး စာသားလည်းပါရင် display လုပ်မယ်
                 if (result.text && result.text.trim() !== '') {
+                    console.log("8. Result has text. Displaying results.");
                     displayResults(result.text);
                 } else {
-                    // Response အောင်မြင်ပေမယ့် ဘာစာမှမပါရင် ဒီ message ပြမယ်
+                    console.log("9. Result has no text or is empty. Throwing empty content error.");
                     throw new Error("API မှ အချက်အလက်ရသော်လည်း ပြသရန် စာသားမပါဝင်ပါ။");
                 }
+                console.log("10. End of try block.");
 
             } catch (error) {
-                console.error("Error:", error);
+                console.error("11. CATCH BLOCK TRIGGERED. Error:", error);
                 analysisOutput.innerHTML = `<div class="glass-card rounded-xl p-6 text-red-400">သုံးသပ်ချက်ရယူရာတွင် အမှားအယွင်းเกิดขึ้นပါသည်။<br>${error.message}</div>`;
             } finally {
+                console.log("12. FINALLY BLOCK TRIGGERED. Hiding loader.");
                 loader.style.display = 'none';
             }
         }
 
         function displayResults(text) {
+            console.log("Displaying results function called.");
             const summaryMatch = text.match(/### သတင်းအကျဉ်းချုပ်([\s\S]*?)###/);
             const calendarMatch = text.match(/### အရေးကြီးသော စီးပွားရေးသတင်းများ([\s\S]*?)###/);
             const sentimentMatch = text.match(/### ဈေးကွက်၏ ခံစားချက်([\s\S]*)/);
             let html = '';
-            if (summaryMatch) {
-                html += `<div class="output-card glass-card rounded-xl p-6"><h3>သတင်းအကျဉ်းချုပ်</h3><ul class="space-y-2 list-disc">${formatText(summaryMatch[1])}</ul></div>`;
-            }
-            if (calendarMatch) {
-                html += `<div class="output-card glass-card rounded-xl p-6"><h3>အရေးကြီးသော စီးပွားရေးသတင်းများ</h3><div>${formatText(calendarMatch[1])}</div></div>`;
-            }
-            if (sentimentMatch) {
-                html += `<div class="output-card glass-card rounded-xl p-6"><h3>ဈေးကွက်၏ ခံစားချက်</h3><div>${formatText(sentimentMatch[1])}</div></div>`;
-            }
+            if (summaryMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>သတင်းအကျဉ်းချုပ်</h3><ul class="space-y-2 list-disc">${formatText(summaryMatch[1])}</ul></div>`; }
+            if (calendarMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>အရေးကြီးသော စီးပွားရေးသတင်းများ</h3><div>${formatText(calendarMatch[1])}</div></div>`; }
+            if (sentimentMatch) { html += `<div class="output-card glass-card rounded-xl p-6"><h3>ဈေးကွက်၏ ခံစားချက်</h3><div>${formatText(sentimentMatch[1])}</div></div>`; }
             analysisOutput.innerHTML = html;
         }
 
